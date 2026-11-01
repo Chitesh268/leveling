@@ -1,0 +1,453 @@
+/* =====================================================================
+   ARISE — Solo Leveling "System" interface
+   Black glass panels · cyan/violet energy · electric + flame borders
+   ===================================================================== */
+
+:root {
+  --bg: #000;
+  --line: #16395b;
+  --text: #f6fbff;
+  --muted: #a9bdd4;
+  --gold: #ffd77a;
+  --green: #6bffcb;
+  --red: #ff426d;
+  --energy: #33c8ff;
+  --energy2: #d2fbff;
+  --font: 'Rajdhani', 'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', sans-serif;
+  --serif: 'Cinzel', 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { background: #000; -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; min-height: 100vh; color: var(--text); background: var(--bg);
+  font: 500 16px/1.45 var(--font); overflow-x: hidden;
+}
+::selection { background: color-mix(in srgb, var(--energy) 45%, transparent); color: #fff; }
+button, input, select, textarea { font: inherit; color: inherit; }
+h1, h2, h3, h4, p { margin: 0; }
+:focus-visible { outline: 2px solid var(--energy2); outline-offset: 2px; }
+.fx-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+.muted { color: var(--muted); }
+.tiny { font-size: 9px; letter-spacing: .2em; }
+
+/* ---------- background stack ---------- */
+.bg { position: fixed; inset: 0; z-index: -3; pointer-events: none; overflow: hidden;
+  background: radial-gradient(ellipse 80% 40% at 50% -12%, color-mix(in srgb, var(--energy) 8%, transparent), transparent 70%), #000; }
+.bg__grid { position: absolute; inset: 0;
+  background-image: linear-gradient(color-mix(in srgb, var(--energy) 5%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--energy) 5%, transparent) 1px, transparent 1px);
+  background-size: 48px 48px;
+  -webkit-mask-image: radial-gradient(ellipse 90% 60% at 50% 20%, #000 0, transparent 75%); mask-image: radial-gradient(ellipse 90% 60% at 50% 20%, #000 0, transparent 75%); }
+.bg__mist { display: none; }
+.bg__vig { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 40%, transparent 35%, rgba(0, 0, 0, .95) 112%); }
+.fx-canvas { position: fixed; inset: 0; z-index: -2; pointer-events: none; }
+.scan { display: none; position: fixed; inset: 0; z-index: 80; pointer-events: none; overflow: hidden; }
+body[data-fx='high'] .scan { display: block; }
+.scan::after { content: ''; position: absolute; left: 0; right: 0; top: -20vh; height: 16vh; will-change: transform;
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--energy) 4%, transparent), transparent); animation: scanMove 12s linear infinite; }
+.flash { position: fixed; inset: 0; z-index: 90; pointer-events: none; opacity: 0;
+  background: radial-gradient(ellipse at 50% 30%, color-mix(in srgb, var(--energy2) 55%, transparent), color-mix(in srgb, var(--energy) 22%, transparent) 60%, transparent); }
+body.thunder-hit .flash { animation: thunderFlash .55s linear; }
+body.thunder-hit .app { animation: shake .5s linear; }
+
+/* ---------- layout ---------- */
+.app { position: relative; z-index: 1; max-width: 1240px; margin: 0 auto; padding: 18px 18px 44px; display: flex; flex-direction: column; gap: 22px; }
+.layout { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 22px; align-items: start; }
+.col { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+.row.space { justify-content: space-between; }
+.view { animation: rise .45s cubic-bezier(.2, .8, .2, 1) both; display: flex; flex-direction: column; gap: 22px; }
+.footer { text-align: center; font-size: 11px; letter-spacing: .32em; color: color-mix(in srgb, var(--energy2) 45%, #4a5a70); padding-top: 8px; }
+
+/* =====================================================================
+   FRAME — crisp border + highlighted corner designs
+   (no border glow) · side light · soft flames · looping dust (big frames + alerts)
+   ===================================================================== */
+.frame {
+  --r: 8px; --cs: 46px; --pad: 18px;
+  position: relative; isolation: isolate; border-radius: var(--r);
+  background: linear-gradient(155deg, #020611, #000206 60%, #01040c);
+}
+.frame--hero { --r: 12px; --cs: 64px; --pad: 22px; }
+.frame--head { --r: 12px; --cs: 54px; --pad: 16px; }
+.frame--alert { --r: 12px; --cs: 64px; --pad: 0px; }
+.frame--tile { --r: 8px; --cs: 28px; --pad: 14px; }
+.frame__body { position: relative; z-index: 2; padding: var(--pad); }
+
+.frame__ring { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1;
+  border: 1.5px solid color-mix(in srgb, var(--energy) 62%, #04111c); }
+
+/* small light running down the right side and up the left side only */
+.comet { position: absolute; top: calc(var(--r) + 2px); bottom: calc(var(--r) + 2px); width: 6px; overflow: hidden; pointer-events: none; z-index: 2; }
+.comet--r { right: -3px; } .comet--l { left: -3px; }
+.comet i { position: absolute; left: 2px; top: 0; width: 2px; height: 30%; opacity: 0; will-change: transform;
+  background: linear-gradient(180deg, transparent, var(--energy) 55%, var(--energy2)); box-shadow: 0 0 3px var(--energy2);
+  animation: .01s; animation-duration: 6s; animation-iteration-count: infinite; animation-timing-function: linear; }
+.comet--r i { animation-name: cometDown; animation-delay: var(--ph, 0s); }
+.comet--l i { animation-name: cometUp; animation-delay: calc(var(--ph, 0s) + 3s); }
+
+/* corner designs: bright, crisp and clearly readable */
+.frame__corner { position: absolute; width: var(--cs); height: var(--cs); z-index: 3; pointer-events: none;
+  color: color-mix(in srgb, var(--energy2) 78%, #fff); filter: drop-shadow(0 0 1.5px var(--energy2)); }
+.frame__corner--tl { left: -5px; top: -5px; }
+.frame__corner--tr { right: -5px; top: -5px; transform: scaleX(-1); }
+.frame__corner--bl { left: -5px; bottom: -5px; transform: scaleY(-1); }
+.frame__corner--br { right: -5px; bottom: -5px; transform: scale(-1, -1); }
+.frame__gem { position: absolute; left: 50%; bottom: -8px; width: 108px; height: 16px; margin-left: -54px; z-index: 3; pointer-events: none;
+  color: color-mix(in srgb, var(--energy2) 78%, #fff); filter: drop-shadow(0 0 1.5px var(--energy2)); }
+.frame--alert .frame__gem { bottom: -9px; width: 130px; margin-left: -65px; }
+
+/* soft flame tongues on the top / bottom edge */
+.flames { position: absolute; left: 14px; right: 14px; height: 0; pointer-events: none; z-index: 0; }
+.flames--top { bottom: calc(100% - 3px); }
+.flames--bottom { top: calc(100% - 3px); transform: scaleY(-1); }
+.flames i { position: absolute; bottom: 0; left: var(--x); width: var(--w); height: var(--h); margin-left: calc(var(--w) / -2);
+  background: radial-gradient(ellipse 50% 88% at 50% 100%, #fff 0, var(--energy2) 14%, color-mix(in srgb, var(--energy) 85%, transparent) 36%, transparent 70%);
+  border-radius: 50% 50% 40% 40% / 72% 72% 28% 28%; transform-origin: 50% 100%; opacity: .8; filter: blur(2.2px); will-change: transform;
+  animation: flame var(--t) ease-in-out var(--dl) infinite; }
+.frame--tile .flames { display: none; }
+
+/* dust ribbon (High): slow double helix. Front half passes over the border line, back half passes behind it. */
+.dust { display: none; position: absolute; left: calc(var(--cs) * .9); right: calc(var(--cs) * .9); height: 28px; overflow: hidden; pointer-events: none;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent); mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent); }
+.dust--top { top: -14px; } .dust--bottom { bottom: -14px; }
+.dust--front { z-index: 3; } .dust--back { z-index: 0; }
+.dust i { position: absolute; left: 0; top: 0; width: calc(100% + 370px); height: 100%; will-change: transform;
+  -webkit-mask-repeat: repeat-x; mask-repeat: repeat-x; -webkit-mask-size: 360px 28px; mask-size: 360px 28px; }
+.dust--front .helix { background: var(--energy2); -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 360 28%22%3E%3Cdefs%3E%3CradialGradient id=%22g%22%3E%3Cstop offset=%220%22 stop-color=%22%23fff%22/%3E%3Cstop offset=%22.4%22 stop-color=%22%23fff%22 stop-opacity=%22.55%22/%3E%3Cstop offset=%221%22 stop-color=%22%23fff%22 stop-opacity=%220%22/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx=%220%22 cy=%2214.0%22 r=%225.1%22 fill=%22url(%23g)%22 opacity=%220.28%22/%3E%3Ccircle cx=%225%22 cy=%2215.4%22 r=%225.0%22 fill=%22url(%23g)%22 opacity=%220.28%22/%3E%3Ccircle cx=%2210%22 cy=%2216.7%22 r=%224.9%22 fill=%22url(%23g)%22 opacity=%220.29%22/%3E%3Ccircle cx=%2215%22 cy=%2218.0%22 r=%224.7%22 fill=%22url(%23g)%22 opacity=%220.29%22/%3E%3Ccircle cx=%2220%22 cy=%2219.1%22 r=%224.5%22 fill=%22url(%23g)%22 opacity=%220.30%22/%3E%3Ccircle cx=%2225%22 cy=%2220.1%22 r=%224.2%22 fill=%22url(%23g)%22 opacity=%220.31%22/%3E%3Ccircle cx=%2230%22 cy=%2220.9%22 r=%223.9%22 fill=%22url(%23g)%22 opacity=%220.33%22/%3E%3Ccircle cx=%2235%22 cy=%2221.5%22 r=%223.5%22 fill=%22url(%23g)%22 opacity=%220.35%22/%3E%3Ccircle cx=%2240%22 cy=%2221.9%22 r=%223.1%22 fill=%22url(%23g)%22 opacity=%220.36%22/%3E%3Ccircle cx=%2245%22 cy=%2222.0%22 r=%222.6%22 fill=%22url(%23g)%22 opacity=%220.39%22/%3E%3Ccircle cx=%2250%22 cy=%226.1%22 r=%223.1%22 fill=%22url(%23g)%22 opacity=%220.41%22/%3E%3Ccircle cx=%2255%22 cy=%226.5%22 r=%223.5%22 fill=%22url(%23g)%22 opacity=%220.43%22/%3E%3Ccircle cx=%2260%22 cy=%227.1%22 r=%223.8%22 fill=%22url(%23g)%22 opacity=%220.46%22/%3E%3Ccircle cx=%2265%22 cy=%227.9%22 r=%224.2%22 fill=%22url(%23g)%22 opacity=%220.49%22/%3E%3Ccircle cx=%2270%22 cy=%228.9%22 r=%224.5%22 fill=%22url(%23g)%22 opacity=%220.52%22/%3E%3Ccircle cx=%2275%22 cy=%2210.0%22 r=%224.7%22 fill=%22url(%23g)%22 opacity=%220.55%22/%3E%3Ccircle cx=%2280%22 cy=%2211.3%22 r=%224.9%22 fill=%22url(%23g)%22 opacity=%220.58%22/%3E%3Ccircle cx=%2285%22 cy=%2212.6%22 r=%225.0%22 fill=%22url(%23g)%22 opacity=%220.61%22/%3E%3Ccircle cx=%2290%22 cy=%2214.0%22 r=%225.1%22 fill=%22url(%23g)%22 opacity=%220.64%22/%3E%3Ccircle cx=%2295%22 cy=%2215.4%22 r=%225.0%22 fill=%22url(%23g)%22 opacity=%220.67%22/%3E%3Ccircle cx=%22100%22 cy=%2216.7%22 r=%224.9%22 fill=%22url(%23g)%22 opacity=%220.70%22/%3E%3Ccircle cx=%22105%22 cy=%2218.0%22 r=%224.7%22 fill=%22url(%23g)%22 opacity=%220.73%22/%3E%3Ccircle cx=%22110%22 cy=%2219.1%22 r=%224.5%22 fill=%22url(%23g)%22 opacity=%220.76%22/%3E%3Ccircle cx=%22115%22 cy=%2220.1%22 r=%224.2%22 fill=%22url(%23g)%22 opacity=%220.79%22/%3E%3Ccircle cx=%22120%22 cy=%2220.9%22 r=%223.9%22 fill=%22url(%23g)%22 opacity=%220.82%22/%3E%3Ccircle cx=%22125%22 cy=%2221.5%22 r=%223.5%22 fill=%22url(%23g)%22 opacity=%220.85%22/%3E%3Ccircle cx=%22130%22 cy=%2221.9%22 r=%223.1%22 fill=%22url(%23g)%22 opacity=%220.87%22/%3E%3Ccircle cx=%22135%22 cy=%2222.0%22 r=%222.6%22 fill=%22url(%23g)%22 opacity=%220.89%22/%3E%3Ccircle cx=%22140%22 cy=%226.1%22 r=%223.1%22 fill=%22url(%23g)%22 opacity=%220.92%22/%3E%3Ccircle cx=%22145%22 cy=%226.5%22 r=%223.5%22 fill=%22url(%23g)%22 opacity=%220.93%22/%3E%3Ccircle cx=%22150%22 cy=%227.1%22 r=%223.9%22 fill=%22url(%23g)%22 opacity=%220.95%22/%3E%3Ccircle cx=%22155%22 cy=%227.9%22 r=%224.2%22 fill=%22url(%23g)%22 opacity=%220.97%22/%3E%3Ccircle cx=%22160%22 cy=%228.9%22 r=%224.5%22 fill=%22url(%23g)%22 opacity=%220.98%22/%3E%3Ccircle cx=%22165%22 cy=%2210.0%22 r=%224.7%22 fill=%22url(%23g)%22 opacity=%220.99%22/%3E%3Ccircle cx=%22170%22 cy=%2211.3%22 r=%224.9%22 fill=%22url(%23g)%22 opacity=%220.99%22/%3E%3Ccircle cx=%22175%22 cy=%2212.6%22 r=%225.0%22 fill=%22url(%23g)%22 opacity=%221.00%22/%3E%3Ccircle cx=%22180%22 cy=%2214.0%22 r=%225.1%22 fill=%22url(%23g)%22 opacity=%221.00%22/%3E%3Ccircle cx=%22185%22 cy=%2215.4%22 r=%225.0%22 fill=%22url(%23g)%22 opacity=%221.00%22/%3E%3Ccircle cx=%22190%22 cy=%2216.7%22 r=%224.9%22 fill=%22url(%23g)%22 opacity=%220.99%22/%3E%3Ccircle cx=%22195%22 cy=%2218.0%22 r=%224.7%22 fill=%22url(%23g)%22 opacity=%220.99%22/%3E%3Ccircle cx=%22200%22 cy=%2219.1%22 r=%224.5%22 fill=%22url(%23g)%22 opacity=%220.98%22/%3E%3Ccircle cx=%22205%22 cy=%2220.1%22 r=%224.2%22 fill=%22url(%23g)%22 opacity=%220.97%22/%3E%3Ccircle cx=%22210%22 cy=%2220.9%22 r=%223.8%22 fill=%22url(%23g)%22 opacity=%220.95%22/%3E%3Ccircle cx=%22215%22 cy=%2221.5%22 r=%223.5%22 fill=%22url(%23g)%22 opacity=%220.93%22/%3E%3Ccircle cx=%22220%22 cy=%2221.9%22 r=%223.1%22 fill=%22url(%23g)%22 opacity=%220.92%22/%3E%3Ccircle cx=%22225%22 cy=%2222.0%22 r=%222.6%22 fill=%22url(%23g)%22 opacity=%220.89%22/%3E%3Ccircle cx=%22230%22 cy=%226.1%22 r=%223.1%22 fill=%22url(%23g)%22 opacity=%220.87%22/%3E%3Ccircle cx=%22235%22 cy=%226.5%22 r=%223.5%22 fill=%22url(%23g)%22 opacity=%220.85%22/%3E%3Ccircle cx=%22240%22 cy=%227.1%22 r=%223.8%22 fill=%22url(%23g)%22 opacity=%220.82%22/%3E%3Ccircle cx=%22245%22 cy=%227.9%22 r=%224.2%22 fill=%22url(%23g)%22 opacity=%220.79%22/%3E%3Ccircle cx=%22250%22 cy=%228.9%22 r=%224.5%22 fill=%22url(%23g)%22 opacity=%220.76%22/%3E%3Ccircle cx=%22255%22 cy=%2210.0%22 r=%224.7%22 fill=%22url(%23g)%22 opacity=%220.73%22/%3E%3Ccircle cx=%22260%22 cy=%2211.3%22 r=%224.9%22 fill=%22url(%23g)%22 opacity=%220.70%22/%3E%3Ccircle cx=%22265%22 cy=%2212.6%22 r=%225.0%22 fill=%22url(%23g)%22 opacity=%220.67%22/%3E%3Ccircle cx=%22270%22 cy=%2214.0%22 r=%225.1%22 fill=%22url(%23g)%22 opacity=%220.64%22/%3E%3Ccircle cx=%22275%22 cy=%2215.4%22 r=%225.0%22 fill=%22url(%23g)%22 opacity=%220.61%22/%3E%3Ccircle cx=%22280%22 cy=%2216.7%22 r=%224.9%22 fill=%22url(%23g)%22 opacity=%220.58%22/%3E%3Ccircle cx=%22285%22 cy=%2218.0%22 r=%224.7%22 fill=%22url(%23g)%22 opacity=%220.55%22/%3E%3Ccircle cx=%22290%22 cy=%2219.1%22 r=%224.5%22 fill=%22url(%23g)%22 opacity=%220.52%22/%3E%3Ccircle cx=%22295%22 cy=%2220.1%22 r=%224.2%22 fill=%22url(%23g)%22 opacity=%220.49%22/%3E%3Ccircle cx=%22300%22 cy=%2220.9%22 r=%223.9%22 fill=%22url(%23g)%22 opacity=%220.46%22/%3E%3Ccircle cx=%22305%22 cy=%2221.5%22 r=%223.5%22 fill=%22url(%23g)%22 opacity=%220.43%22/%3E%3Ccircle cx=%22310%22 cy=%2221.9%22 r=%223.1%22 fill=%22url(%23g)%22 opacity=%220.41%22/%3E%3Ccircle cx=%22315%22 cy=%2222.0%22 r=%222.6%22 fill=%22url(%23g)%22 opacity=%220.39%22/%3E%3Ccircle cx=%22320%22 cy=%226.1%22 r=%223.1%22 fill=%22url(%23g)%22 opacity=%220.36%22/%3E%3Ccircle cx=%22325%22 cy=%226.5%22 r=%223.5%22 fill=%22url(%23g)%22 opacity=%220.35%22/%3E%3Ccircle cx=%22330%22 cy=%227.1%22 r=%223.8%22 fill=%22url(%23g)%22 opacity=%220.33%22/%3E%3Ccircle cx=%22335%22 cy=%227.9%22 r=%224.2%22 fill=%22url(%23g)%22 opacity=%220.31%22/%3E%3Ccircle cx=%22340%22 cy=%228.9%22 r=%224.5%22 fill=%22url(%23g)%22 opacity=%220.30%22/%3E%3Ccircle cx=%22345%22 cy=%2210.0%22 r=%224.7%22 fill=%22url(%23g)%22 opacity=%220.29%22/%3E%3Ccircle cx=%22350%22 cy=%2211.3%22 r=%224.9%22 fill=%22url(%23g)%22 opacity=%220.29%22/%3E%3Ccircle cx=%22355%22 cy=%2212.6%22 r=%225.0%22 fill=%22url(%23g)%22 opacity=%220.28%22/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 360 28%22%3E%3Cdefs%3E%3CradialGradient id=%22g%22%3E%3Cstop offset=%220%22 stop-color=%22%23fff%22/%3E%3Cstop offset=%22.4%22 stop-color=%22%23fff%22 stop-opacity=%22.55%22/%3E%3Cstop offset=%221%22 stop-color=%22%23fff%22 stop-opacity=%220%22/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx=%220%22 cy=%2214.0%22 r=%225.1%22 fill=%22url(%23g)%22 opacity=%220.28%22/%3E%3Ccircle cx=%225%22 cy=%2215.4%22 r=%225.0%22 fill=%22url(%23g)%22 opacity=%220.28%22/%3E%3Ccircle cx=%2210%22 cy=%2216.7%22 r=%224.9%22 fill=%22url(%23g)%22 opacity=%220.29%22/%3E%3Ccircle cx=%2215%22 cy=%2218.0%22 r=%224.7%22 fill=%22url(%23g)%22 opacity=%220.29%22/%3E%3Ccircle cx=%2220%22 cy=%2219.1%22 r=%224.5%22 fill=%22url(%23g)%22 opacity=%220.30%22/%3E%3Ccircle cx=%2225%22 cy=%2220.1%22 r=%224.2%22 fill=%22url(%23g)%22 opacity=%220.31%22/%3E%3Ccircle cx=%2230%22 cy=%2220.9%22 r=%223.9%22 fill=%22url(%23g)%22 opacity=%220.33%22/%3E%3Ccircle cx=%2235%22 cy=%2221.5%22 r=%223.5%22 fill=%22url(%23g)%22 opacity=%220.35%22/%3E%3Ccircle cx=%2240%22 cy=%2221.9%22 r=%223.1%22 fill=%22url(%23g)%22 opacity=%220.36%22/%3E%3Ccircle cx=%2245%22 cy=%2222.0%22 r=%222.6%22 fill=%22url(%23g)%22 opacity=%220.39%22/%3E%3Ccircle cx=%2250%22 cy=%226.1%22 r=%223.1%22 fill=%22url(%23g)%22 opacity=%220.41%22/%3E%3Ccircle cx=%2255%22 cy=%226.5%22 r=%223.5%22 fill=%22url(%23g)%22 opacity=%220.43%22/%3E%3Ccircle cx=%2260%22 cy=%227.1%22 r=%223.8%22 fill=%22url(%23g)%22 opacity=%220.46%22/%3E%3Ccircle cx=%2265%22 cy=%227.9%22 r=%224.2%22 fill=%22url(%23g)%22 opacity=%220.49%22/%3E%3Ccircle cx=%2270%22 cy=%228.9%22 r=%224.5%22 fill=%22url(%23g)%22 opacity=%220.52%22/%3E%3Ccircle cx=%2275%22 cy=%2210.0%22 r=%224.7%22 fill=%22url(%23g)%22 opacity=%220.55%22/%3E%3Ccircle cx=%2280%22 cy=%2211.3%22 r=%224.9%22 fill=%22url(%23g)%22 opacity=%220.58%22/%3E%3Ccircle cx=%2285%22 cy=%2212.6%22 r=%225.0%22 fill=%22url(%23g)%22 opacity=%220.61%22/%3E%3Ccircle cx=%2290%22 cy=%2214.0%22 r=%225.1%22 fill=%22url(%23g)%22 opacity=%220.64%22/%3E%3Ccircle cx=%2295%22 cy=%2215.4%22 r=%225.0%22 fill=%22url(%23g)%22 opacity=%220.67%22/%3E%3Ccircle cx=%22100%22 cy=%2216.7%22 r=%224.9%22 fill=%22url(%23g)%22 opacity=%220.70%22/%3E%3Ccircle cx=%22105%22 cy=%2218.0%22 r=%224.7%22 fill=%22url(%23g)%22 opacity=%220.73%22/%3E%3Ccircle cx=%22110%22 cy=%2219.1%22 r=%224.5%22 fill=%22url(%23g)%22 opacity=%220.76%22/%3E%3Ccircle cx=%22115%22 cy=%2220.1%22 r=%224.2%22 fill=%22url(%23g)%22 opacity=%220.79%22/%3E%3Ccircle cx=%22120%22 cy=%2220.9%22 r=%223.9%22 fill=%22url(%23g)%22 opacity=%220.82%22/%3E%3Ccircle cx=%22125%22 cy=%2221.5%22 r=%223.5%22 fill=%22url(%23g)%22 opacity=%220.85%22/%3E%3Ccircle cx=%22130%22 cy=%2221.9%22 r=%223.1%22 fill=%22url(%23g)%22 opacity=%220.87%22/%3E%3Ccircle cx=%22135%22 cy=%2222.0%22 r=%222.6%22 fill=%22url(%23g)%22 opacity=%220.89%22/%3E%3Ccircle cx=%22140%22 cy=%226.1%22 r=%223.1%22 fill=%22url(%23g)%22 opacity=%220.92%22/%3E%3Ccircle cx=%22145%22 cy=%226.5%22 r=%223.5%22 fill=%22url(%23g)%22 opacity=%220.93%22/%3E%3Ccircle cx=%22150%22 cy=%227.1%22 r=%223.9%22 fill=%22url(%23g)%22 opacity=%220.95%22/%3E%3Ccircle cx=%22155%22 cy=%227.9%22 r=%224.2%22 fill=%22url(%23g)%22 opacity=%220.97%22/%3E%3Ccircle cx=%22160%22 cy=%228.9%22 r=%224.5%22 fill=%22url(%23g)%22 opacity=%220.98%22/%3E%3Ccircle cx=%22165%22 cy=%2210.0%22 r=%224.7%22 fill=%22url(%23g)%22 opacity=%220.99%22/%3E%3Ccircle cx=%22170%22 cy=%2211.3%22 r=%224.9%22 fill=%22url(%23g)%22 opacity=%220.99%22/%3E%3Ccircle cx=%22175%22 cy=%2212.6%22 r=%225.0%22 fill=%22url(%23g)%22 opacity=%221.00%22/%3E%3Ccircle cx=%22180%22 cy=%2214.0%22 r=%225.1%22 fill=%22url(%23g)%22 opacity=%221.00%22/%3E%3Ccircle cx=%22185%22 cy=%2215.4%22 r=%225.0%22 fill=%22url(%23g)%22 opacity=%221.00%22/%3E%3Ccircle cx=%22190%22 cy=%2216.7%22 r=%224.9%22 fill=%22url(%23g)%22 opacity=%220.99%22/%3E%3Ccircle cx=%22195%22 cy=%2218.0%22 r=%224.7%22 fill=%22url(%23g)%22 opacity=%220.99%22/%3E%3Ccircle cx=%22200%22 cy=%2219.1%22 r=%224.5%22 fill=%22url(%23g)%22 opacity=%220.98%22/%3E%3Ccircle cx=%22205%22 cy=%2220.1%22 r=%224.2%22 fill=%22url(%23g)%22 opacity=%220.97%22/%3E%3Ccircle cx=%22210%22 cy=%2220.9%22 r=%223.8%22 fill=%22url(%23g)%22 opacity=%220.95%22/%3E%3Ccircle cx=%22215%22 cy=%2221.5%22 r=%223.5%22 fill=%22url(%23g)%22 opacity=%220.93%22/%3E%3Ccircle cx=%22220%22 cy=%2221.9%22 r=%223.1%22 fill=%22url(%23g)%22 opacity=%220.92%22/%3E%3Ccircle cx=%22225%22 cy=%2222.0%22 r=%222.6%22 fill=%22url(%23g)%22 opacity=%220.89%22/%3E%3Ccircle cx=%22230%22 cy=%226.1%22 r=%223.1%22 fill=%22url(%23g)%22 opacity=%220.87%22/%3E%3Ccircle cx=%22235%22 cy=%226.5%22 r=%223.5%22 fill=%22url(%23g)%22 opacity=%220.85%22/%3E%3Ccircle cx=%22240%22 cy=%227.1%22 r=%223.8%22 fill=%22url(%23g)%22 opacity=%220.82%22/%3E%3Ccircle cx=%22245%22 cy=%227.9%22 r=%224.2%22 fill=%22url(%23g)%22 opacity=%220.79%22/%3E%3Ccircle cx=%22250%22 cy=%228.9%22 r=%224.5%22 fill=%22url(%23g)%22 opacity=%220.76%22/%3E%3Ccircle cx=%22255%22 cy=%2210.0%22 r=%224.7%22 fill=%22url(%23g)%22 opacity=%220.73%22/%3E%3Ccircle cx=%22260%22 cy=%2211.3%22 r=%224.9%22 fill=%22url(%23g)%22 opacity=%220.70%22/%3E%3Ccircle cx=%22265%22 cy=%2212.6%22 r=%225.0%22 fill=%22url(%23g)%22 opacity=%220.67%22/%3E%3Ccircle cx=%22270%22 cy=%2214.0%22 r=%225.1%22 fill=%22url(%23g)%22 opacity=%220.64%22/%3E%3Ccircle cx=%22275%22 cy=%2215.4%22 r=%225.0%22 fill=%22url(%23g)%22 opacity=%220.61%22/%3E%3Ccircle cx=%22280%22 cy=%2216.7%22 r=%224.9%22 fill=%22url(%23g)%22 opacity=%220.58%22/%3E%3Ccircle cx=%22285%22 cy=%2218.0%22 r=%224.7%22 fill=%22url(%23g)%22 opacity=%220.55%22/%3E%3Ccircle cx=%22290%22 cy=%2219.1%22 r=%224.5%22 fill=%22url(%23g)%22 opacity=%220.52%22/%3E%3Ccircle cx=%22295%22 cy=%2220.1%22 r=%224.2%22 fill=%22url(%23g)%22 opacity=%220.49%22/%3E%3Ccircle cx=%22300%22 cy=%2220.9%22 r=%223.9%22 fill=%22url(%23g)%22 opacity=%220.46%22/%3E%3Ccircle cx=%22305%22 cy=%2221.5%22 r=%223.5%22 fill=%22url(%23g)%22 opacity=%220.43%22/%3E%3Ccircle cx=%22310%22 cy=%2221.9%22 r=%223.1%22 fill=%22url(%23g)%22 opacity=%220.41%22/%3E%3Ccircle cx=%22315%22 cy=%2222.0%22 r=%222.6%22 fill=%22url(%23g)%22 opacity=%220.39%22/%3E%3Ccircle cx=%22320%22 cy=%226.1%22 r=%223.1%22 fill=%22url(%23g)%22 opacity=%220.36%22/%3E%3Ccircle cx=%22325%22 cy=%226.5%22 r=%223.5%22 fill=%22url(%23g)%22 opacity=%220.35%22/%3E%3Ccircle cx=%22330%22 cy=%227.1%22 r=%223.8%22 fill=%22url(%23g)%22 opacity=%220.33%22/%3E%3Ccircle cx=%22335%22 cy=%227.9%22 r=%224.2%22 fill=%22url(%23g)%22 opacity=%220.31%22/%3E%3Ccircle cx=%22340%22 cy=%228.9%22 r=%224.5%22 fill=%22url(%23g)%22 opacity=%220.30%22/%3E%3Ccircle cx=%22345%22 cy=%2210.0%22 r=%224.7%22 fill=%22url(%23g)%22 opacity=%220.29%22/%3E%3Ccircle cx=%22350%22 cy=%2211.3%22 r=%224.9%22 fill=%22url(%23g)%22 opacity=%220.29%22/%3E%3Ccircle cx=%22355%22 cy=%2212.6%22 r=%225.0%22 fill=%22url(%23g)%22 opacity=%220.28%22/%3E%3C/svg%3E"); animation: dustR 20s linear infinite; }
+.dust--back i { background: color-mix(in srgb, var(--energy) 75%, #000); -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 360 28%22%3E%3Cdefs%3E%3CradialGradient id=%22g%22%3E%3Cstop offset=%220%22 stop-color=%22%23fff%22/%3E%3Cstop offset=%22.4%22 stop-color=%22%23fff%22 stop-opacity=%22.55%22/%3E%3Cstop offset=%221%22 stop-color=%22%23fff%22 stop-opacity=%220%22/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx=%220%22 cy=%2214.0%22 r=%223.3%22 fill=%22url(%23g)%22 opacity=%220.17%22/%3E%3Ccircle cx=%225%22 cy=%2212.6%22 r=%223.3%22 fill=%22url(%23g)%22 opacity=%220.17%22/%3E%3Ccircle cx=%2210%22 cy=%2211.3%22 r=%223.2%22 fill=%22url(%23g)%22 opacity=%220.17%22/%3E%3Ccircle cx=%2215%22 cy=%2210.0%22 r=%223.1%22 fill=%22url(%23g)%22 opacity=%220.18%22/%3E%3Ccircle cx=%2220%22 cy=%228.9%22 r=%222.9%22 fill=%22url(%23g)%22 opacity=%220.18%22/%3E%3Ccircle cx=%2225%22 cy=%227.9%22 r=%222.7%22 fill=%22url(%23g)%22 opacity=%220.19%22/%3E%3Ccircle cx=%2230%22 cy=%227.1%22 r=%222.5%22 fill=%22url(%23g)%22 opacity=%220.20%22/%3E%3Ccircle cx=%2235%22 cy=%226.5%22 r=%222.3%22 fill=%22url(%23g)%22 opacity=%220.21%22/%3E%3Ccircle cx=%2240%22 cy=%226.1%22 r=%222.0%22 fill=%22url(%23g)%22 opacity=%220.22%22/%3E%3Ccircle cx=%2245%22 cy=%226.0%22 r=%221.8%22 fill=%22url(%23g)%22 opacity=%220.23%22/%3E%3Ccircle cx=%2250%22 cy=%2221.9%22 r=%222.0%22 fill=%22url(%23g)%22 opacity=%220.25%22/%3E%3Ccircle cx=%2255%22 cy=%2221.5%22 r=%222.3%22 fill=%22url(%23g)%22 opacity=%220.26%22/%3E%3Ccircle cx=%2260%22 cy=%2220.9%22 r=%222.5%22 fill=%22url(%23g)%22 opacity=%220.28%22/%3E%3Ccircle cx=%2265%22 cy=%2220.1%22 r=%222.7%22 fill=%22url(%23g)%22 opacity=%220.29%22/%3E%3Ccircle cx=%2270%22 cy=%2219.1%22 r=%222.9%22 fill=%22url(%23g)%22 opacity=%220.31%22/%3E%3Ccircle cx=%2275%22 cy=%2218.0%22 r=%223.1%22 fill=%22url(%23g)%22 opacity=%220.33%22/%3E%3Ccircle cx=%2280%22 cy=%2216.7%22 r=%223.2%22 fill=%22url(%23g)%22 opacity=%220.35%22/%3E%3Ccircle cx=%2285%22 cy=%2215.4%22 r=%223.3%22 fill=%22url(%23g)%22 opacity=%220.37%22/%3E%3Ccircle cx=%2290%22 cy=%2214.0%22 r=%223.3%22 fill=%22url(%23g)%22 opacity=%220.38%22/%3E%3Ccircle cx=%2295%22 cy=%2212.6%22 r=%223.3%22 fill=%22url(%23g)%22 opacity=%220.40%22/%3E%3Ccircle cx=%22100%22 cy=%2211.3%22 r=%223.2%22 fill=%22url(%23g)%22 opacity=%220.42%22/%3E%3Ccircle cx=%22105%22 cy=%2210.0%22 r=%223.1%22 fill=%22url(%23g)%22 opacity=%220.44%22/%3E%3Ccircle cx=%22110%22 cy=%228.9%22 r=%222.9%22 fill=%22url(%23g)%22 opacity=%220.46%22/%3E%3Ccircle cx=%22115%22 cy=%227.9%22 r=%222.7%22 fill=%22url(%23g)%22 opacity=%220.48%22/%3E%3Ccircle cx=%22120%22 cy=%227.1%22 r=%222.5%22 fill=%22url(%23g)%22 opacity=%220.49%22/%3E%3Ccircle cx=%22125%22 cy=%226.5%22 r=%222.3%22 fill=%22url(%23g)%22 opacity=%220.51%22/%3E%3Ccircle cx=%22130%22 cy=%226.1%22 r=%222.0%22 fill=%22url(%23g)%22 opacity=%220.52%22/%3E%3Ccircle cx=%22135%22 cy=%226.0%22 r=%221.8%22 fill=%22url(%23g)%22 opacity=%220.54%22/%3E%3Ccircle cx=%22140%22 cy=%2221.9%22 r=%222.0%22 fill=%22url(%23g)%22 opacity=%220.55%22/%3E%3Ccircle cx=%22145%22 cy=%2221.5%22 r=%222.3%22 fill=%22url(%23g)%22 opacity=%220.56%22/%3E%3Ccircle cx=%22150%22 cy=%2220.9%22 r=%222.5%22 fill=%22url(%23g)%22 opacity=%220.57%22/%3E%3Ccircle cx=%22155%22 cy=%2220.1%22 r=%222.7%22 fill=%22url(%23g)%22 opacity=%220.58%22/%3E%3Ccircle cx=%22160%22 cy=%2219.1%22 r=%222.9%22 fill=%22url(%23g)%22 opacity=%220.59%22/%3E%3Ccircle cx=%22165%22 cy=%2218.0%22 r=%223.1%22 fill=%22url(%23g)%22 opacity=%220.59%22/%3E%3Ccircle cx=%22170%22 cy=%2216.7%22 r=%223.2%22 fill=%22url(%23g)%22 opacity=%220.60%22/%3E%3Ccircle cx=%22175%22 cy=%2215.4%22 r=%223.3%22 fill=%22url(%23g)%22 opacity=%220.60%22/%3E%3Ccircle cx=%22180%22 cy=%2214.0%22 r=%223.3%22 fill=%22url(%23g)%22 opacity=%220.60%22/%3E%3Ccircle cx=%22185%22 cy=%2212.6%22 r=%223.3%22 fill=%22url(%23g)%22 opacity=%220.60%22/%3E%3Ccircle cx=%22190%22 cy=%2211.3%22 r=%223.2%22 fill=%22url(%23g)%22 opacity=%220.60%22/%3E%3Ccircle cx=%22195%22 cy=%2210.0%22 r=%223.1%22 fill=%22url(%23g)%22 opacity=%220.59%22/%3E%3Ccircle cx=%22200%22 cy=%228.9%22 r=%222.9%22 fill=%22url(%23g)%22 opacity=%220.59%22/%3E%3Ccircle cx=%22205%22 cy=%227.9%22 r=%222.7%22 fill=%22url(%23g)%22 opacity=%220.58%22/%3E%3Ccircle cx=%22210%22 cy=%227.1%22 r=%222.5%22 fill=%22url(%23g)%22 opacity=%220.57%22/%3E%3Ccircle cx=%22215%22 cy=%226.5%22 r=%222.3%22 fill=%22url(%23g)%22 opacity=%220.56%22/%3E%3Ccircle cx=%22220%22 cy=%226.1%22 r=%222.0%22 fill=%22url(%23g)%22 opacity=%220.55%22/%3E%3Ccircle cx=%22225%22 cy=%226.0%22 r=%221.8%22 fill=%22url(%23g)%22 opacity=%220.54%22/%3E%3Ccircle cx=%22230%22 cy=%2221.9%22 r=%222.0%22 fill=%22url(%23g)%22 opacity=%220.52%22/%3E%3Ccircle cx=%22235%22 cy=%2221.5%22 r=%222.3%22 fill=%22url(%23g)%22 opacity=%220.51%22/%3E%3Ccircle cx=%22240%22 cy=%2220.9%22 r=%222.5%22 fill=%22url(%23g)%22 opacity=%220.49%22/%3E%3Ccircle cx=%22245%22 cy=%2220.1%22 r=%222.7%22 fill=%22url(%23g)%22 opacity=%220.48%22/%3E%3Ccircle cx=%22250%22 cy=%2219.1%22 r=%222.9%22 fill=%22url(%23g)%22 opacity=%220.46%22/%3E%3Ccircle cx=%22255%22 cy=%2218.0%22 r=%223.1%22 fill=%22url(%23g)%22 opacity=%220.44%22/%3E%3Ccircle cx=%22260%22 cy=%2216.7%22 r=%223.2%22 fill=%22url(%23g)%22 opacity=%220.42%22/%3E%3Ccircle cx=%22265%22 cy=%2215.4%22 r=%223.3%22 fill=%22url(%23g)%22 opacity=%220.40%22/%3E%3Ccircle cx=%22270%22 cy=%2214.0%22 r=%223.3%22 fill=%22url(%23g)%22 opacity=%220.38%22/%3E%3Ccircle cx=%22275%22 cy=%2212.6%22 r=%223.3%22 fill=%22url(%23g)%22 opacity=%220.37%22/%3E%3Ccircle cx=%22280%22 cy=%2211.3%22 r=%223.2%22 fill=%22url(%23g)%22 opacity=%220.35%22/%3E%3Ccircle cx=%22285%22 cy=%2210.0%22 r=%223.1%22 fill=%22url(%23g)%22 opacity=%220.33%22/%3E%3Ccircle cx=%22290%22 cy=%228.9%22 r=%222.9%22 fill=%22url(%23g)%22 opacity=%220.31%22/%3E%3Ccircle cx=%22295%22 cy=%227.9%22 r=%222.7%22 fill=%22url(%23g)%22 opacity=%220.29%22/%3E%3Ccircle cx=%22300%22 cy=%227.1%22 r=%222.5%22 fill=%22url(%23g)%22 opacity=%220.28%22/%3E%3Ccircle cx=%22305%22 cy=%226.5%22 r=%222.3%22 fill=%22url(%23g)%22 opacity=%220.26%22/%3E%3Ccircle cx=%22310%22 cy=%226.1%22 r=%222.0%22 fill=%22url(%23g)%22 opacity=%220.25%22/%3E%3Ccircle cx=%22315%22 cy=%226.0%22 r=%221.8%22 fill=%22url(%23g)%22 opacity=%220.23%22/%3E%3Ccircle cx=%22320%22 cy=%2221.9%22 r=%222.0%22 fill=%22url(%23g)%22 opacity=%220.22%22/%3E%3Ccircle cx=%22325%22 cy=%2221.5%22 r=%222.3%22 fill=%22url(%23g)%22 opacity=%220.21%22/%3E%3Ccircle cx=%22330%22 cy=%2220.9%22 r=%222.5%22 fill=%22url(%23g)%22 opacity=%220.20%22/%3E%3Ccircle cx=%22335%22 cy=%2220.1%22 r=%222.7%22 fill=%22url(%23g)%22 opacity=%220.19%22/%3E%3Ccircle cx=%22340%22 cy=%2219.1%22 r=%222.9%22 fill=%22url(%23g)%22 opacity=%220.18%22/%3E%3Ccircle cx=%22345%22 cy=%2218.0%22 r=%223.1%22 fill=%22url(%23g)%22 opacity=%220.18%22/%3E%3Ccircle cx=%22350%22 cy=%2216.7%22 r=%223.2%22 fill=%22url(%23g)%22 opacity=%220.17%22/%3E%3Ccircle cx=%22355%22 cy=%2215.4%22 r=%223.3%22 fill=%22url(%23g)%22 opacity=%220.17%22/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 360 28%22%3E%3Cdefs%3E%3CradialGradient id=%22g%22%3E%3Cstop offset=%220%22 stop-color=%22%23fff%22/%3E%3Cstop offset=%22.4%22 stop-color=%22%23fff%22 stop-opacity=%22.55%22/%3E%3Cstop offset=%221%22 stop-color=%22%23fff%22 stop-opacity=%220%22/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx=%220%22 cy=%2214.0%22 r=%223.3%22 fill=%22url(%23g)%22 opacity=%220.17%22/%3E%3Ccircle cx=%225%22 cy=%2212.6%22 r=%223.3%22 fill=%22url(%23g)%22 opacity=%220.17%22/%3E%3Ccircle cx=%2210%22 cy=%2211.3%22 r=%223.2%22 fill=%22url(%23g)%22 opacity=%220.17%22/%3E%3Ccircle cx=%2215%22 cy=%2210.0%22 r=%223.1%22 fill=%22url(%23g)%22 opacity=%220.18%22/%3E%3Ccircle cx=%2220%22 cy=%228.9%22 r=%222.9%22 fill=%22url(%23g)%22 opacity=%220.18%22/%3E%3Ccircle cx=%2225%22 cy=%227.9%22 r=%222.7%22 fill=%22url(%23g)%22 opacity=%220.19%22/%3E%3Ccircle cx=%2230%22 cy=%227.1%22 r=%222.5%22 fill=%22url(%23g)%22 opacity=%220.20%22/%3E%3Ccircle cx=%2235%22 cy=%226.5%22 r=%222.3%22 fill=%22url(%23g)%22 opacity=%220.21%22/%3E%3Ccircle cx=%2240%22 cy=%226.1%22 r=%222.0%22 fill=%22url(%23g)%22 opacity=%220.22%22/%3E%3Ccircle cx=%2245%22 cy=%226.0%22 r=%221.8%22 fill=%22url(%23g)%22 opacity=%220.23%22/%3E%3Ccircle cx=%2250%22 cy=%2221.9%22 r=%222.0%22 fill=%22url(%23g)%22 opacity=%220.25%22/%3E%3Ccircle cx=%2255%22 cy=%2221.5%22 r=%222.3%22 fill=%22url(%23g)%22 opacity=%220.26%22/%3E%3Ccircle cx=%2260%22 cy=%2220.9%22 r=%222.5%22 fill=%22url(%23g)%22 opacity=%220.28%22/%3E%3Ccircle cx=%2265%22 cy=%2220.1%22 r=%222.7%22 fill=%22url(%23g)%22 opacity=%220.29%22/%3E%3Ccircle cx=%2270%22 cy=%2219.1%22 r=%222.9%22 fill=%22url(%23g)%22 opacity=%220.31%22/%3E%3Ccircle cx=%2275%22 cy=%2218.0%22 r=%223.1%22 fill=%22url(%23g)%22 opacity=%220.33%22/%3E%3Ccircle cx=%2280%22 cy=%2216.7%22 r=%223.2%22 fill=%22url(%23g)%22 opacity=%220.35%22/%3E%3Ccircle cx=%2285%22 cy=%2215.4%22 r=%223.3%22 fill=%22url(%23g)%22 opacity=%220.37%22/%3E%3Ccircle cx=%2290%22 cy=%2214.0%22 r=%223.3%22 fill=%22url(%23g)%22 opacity=%220.38%22/%3E%3Ccircle cx=%2295%22 cy=%2212.6%22 r=%223.3%22 fill=%22url(%23g)%22 opacity=%220.40%22/%3E%3Ccircle cx=%22100%22 cy=%2211.3%22 r=%223.2%22 fill=%22url(%23g)%22 opacity=%220.42%22/%3E%3Ccircle cx=%22105%22 cy=%2210.0%22 r=%223.1%22 fill=%22url(%23g)%22 opacity=%220.44%22/%3E%3Ccircle cx=%22110%22 cy=%228.9%22 r=%222.9%22 fill=%22url(%23g)%22 opacity=%220.46%22/%3E%3Ccircle cx=%22115%22 cy=%227.9%22 r=%222.7%22 fill=%22url(%23g)%22 opacity=%220.48%22/%3E%3Ccircle cx=%22120%22 cy=%227.1%22 r=%222.5%22 fill=%22url(%23g)%22 opacity=%220.49%22/%3E%3Ccircle cx=%22125%22 cy=%226.5%22 r=%222.3%22 fill=%22url(%23g)%22 opacity=%220.51%22/%3E%3Ccircle cx=%22130%22 cy=%226.1%22 r=%222.0%22 fill=%22url(%23g)%22 opacity=%220.52%22/%3E%3Ccircle cx=%22135%22 cy=%226.0%22 r=%221.8%22 fill=%22url(%23g)%22 opacity=%220.54%22/%3E%3Ccircle cx=%22140%22 cy=%2221.9%22 r=%222.0%22 fill=%22url(%23g)%22 opacity=%220.55%22/%3E%3Ccircle cx=%22145%22 cy=%2221.5%22 r=%222.3%22 fill=%22url(%23g)%22 opacity=%220.56%22/%3E%3Ccircle cx=%22150%22 cy=%2220.9%22 r=%222.5%22 fill=%22url(%23g)%22 opacity=%220.57%22/%3E%3Ccircle cx=%22155%22 cy=%2220.1%22 r=%222.7%22 fill=%22url(%23g)%22 opacity=%220.58%22/%3E%3Ccircle cx=%22160%22 cy=%2219.1%22 r=%222.9%22 fill=%22url(%23g)%22 opacity=%220.59%22/%3E%3Ccircle cx=%22165%22 cy=%2218.0%22 r=%223.1%22 fill=%22url(%23g)%22 opacity=%220.59%22/%3E%3Ccircle cx=%22170%22 cy=%2216.7%22 r=%223.2%22 fill=%22url(%23g)%22 opacity=%220.60%22/%3E%3Ccircle cx=%22175%22 cy=%2215.4%22 r=%223.3%22 fill=%22url(%23g)%22 opacity=%220.60%22/%3E%3Ccircle cx=%22180%22 cy=%2214.0%22 r=%223.3%22 fill=%22url(%23g)%22 opacity=%220.60%22/%3E%3Ccircle cx=%22185%22 cy=%2212.6%22 r=%223.3%22 fill=%22url(%23g)%22 opacity=%220.60%22/%3E%3Ccircle cx=%22190%22 cy=%2211.3%22 r=%223.2%22 fill=%22url(%23g)%22 opacity=%220.60%22/%3E%3Ccircle cx=%22195%22 cy=%2210.0%22 r=%223.1%22 fill=%22url(%23g)%22 opacity=%220.59%22/%3E%3Ccircle cx=%22200%22 cy=%228.9%22 r=%222.9%22 fill=%22url(%23g)%22 opacity=%220.59%22/%3E%3Ccircle cx=%22205%22 cy=%227.9%22 r=%222.7%22 fill=%22url(%23g)%22 opacity=%220.58%22/%3E%3Ccircle cx=%22210%22 cy=%227.1%22 r=%222.5%22 fill=%22url(%23g)%22 opacity=%220.57%22/%3E%3Ccircle cx=%22215%22 cy=%226.5%22 r=%222.3%22 fill=%22url(%23g)%22 opacity=%220.56%22/%3E%3Ccircle cx=%22220%22 cy=%226.1%22 r=%222.0%22 fill=%22url(%23g)%22 opacity=%220.55%22/%3E%3Ccircle cx=%22225%22 cy=%226.0%22 r=%221.8%22 fill=%22url(%23g)%22 opacity=%220.54%22/%3E%3Ccircle cx=%22230%22 cy=%2221.9%22 r=%222.0%22 fill=%22url(%23g)%22 opacity=%220.52%22/%3E%3Ccircle cx=%22235%22 cy=%2221.5%22 r=%222.3%22 fill=%22url(%23g)%22 opacity=%220.51%22/%3E%3Ccircle cx=%22240%22 cy=%2220.9%22 r=%222.5%22 fill=%22url(%23g)%22 opacity=%220.49%22/%3E%3Ccircle cx=%22245%22 cy=%2220.1%22 r=%222.7%22 fill=%22url(%23g)%22 opacity=%220.48%22/%3E%3Ccircle cx=%22250%22 cy=%2219.1%22 r=%222.9%22 fill=%22url(%23g)%22 opacity=%220.46%22/%3E%3Ccircle cx=%22255%22 cy=%2218.0%22 r=%223.1%22 fill=%22url(%23g)%22 opacity=%220.44%22/%3E%3Ccircle cx=%22260%22 cy=%2216.7%22 r=%223.2%22 fill=%22url(%23g)%22 opacity=%220.42%22/%3E%3Ccircle cx=%22265%22 cy=%2215.4%22 r=%223.3%22 fill=%22url(%23g)%22 opacity=%220.40%22/%3E%3Ccircle cx=%22270%22 cy=%2214.0%22 r=%223.3%22 fill=%22url(%23g)%22 opacity=%220.38%22/%3E%3Ccircle cx=%22275%22 cy=%2212.6%22 r=%223.3%22 fill=%22url(%23g)%22 opacity=%220.37%22/%3E%3Ccircle cx=%22280%22 cy=%2211.3%22 r=%223.2%22 fill=%22url(%23g)%22 opacity=%220.35%22/%3E%3Ccircle cx=%22285%22 cy=%2210.0%22 r=%223.1%22 fill=%22url(%23g)%22 opacity=%220.33%22/%3E%3Ccircle cx=%22290%22 cy=%228.9%22 r=%222.9%22 fill=%22url(%23g)%22 opacity=%220.31%22/%3E%3Ccircle cx=%22295%22 cy=%227.9%22 r=%222.7%22 fill=%22url(%23g)%22 opacity=%220.29%22/%3E%3Ccircle cx=%22300%22 cy=%227.1%22 r=%222.5%22 fill=%22url(%23g)%22 opacity=%220.28%22/%3E%3Ccircle cx=%22305%22 cy=%226.5%22 r=%222.3%22 fill=%22url(%23g)%22 opacity=%220.26%22/%3E%3Ccircle cx=%22310%22 cy=%226.1%22 r=%222.0%22 fill=%22url(%23g)%22 opacity=%220.25%22/%3E%3Ccircle cx=%22315%22 cy=%226.0%22 r=%221.8%22 fill=%22url(%23g)%22 opacity=%220.23%22/%3E%3Ccircle cx=%22320%22 cy=%2221.9%22 r=%222.0%22 fill=%22url(%23g)%22 opacity=%220.22%22/%3E%3Ccircle cx=%22325%22 cy=%2221.5%22 r=%222.3%22 fill=%22url(%23g)%22 opacity=%220.21%22/%3E%3Ccircle cx=%22330%22 cy=%2220.9%22 r=%222.5%22 fill=%22url(%23g)%22 opacity=%220.20%22/%3E%3Ccircle cx=%22335%22 cy=%2220.1%22 r=%222.7%22 fill=%22url(%23g)%22 opacity=%220.19%22/%3E%3Ccircle cx=%22340%22 cy=%2219.1%22 r=%222.9%22 fill=%22url(%23g)%22 opacity=%220.18%22/%3E%3Ccircle cx=%22345%22 cy=%2218.0%22 r=%223.1%22 fill=%22url(%23g)%22 opacity=%220.18%22/%3E%3Ccircle cx=%22350%22 cy=%2216.7%22 r=%223.2%22 fill=%22url(%23g)%22 opacity=%220.17%22/%3E%3Ccircle cx=%22355%22 cy=%2215.4%22 r=%223.3%22 fill=%22url(%23g)%22 opacity=%220.17%22/%3E%3C/svg%3E"); animation: dustR 20s linear infinite; }
+.dust--front .motes { background: #fff; -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 300 28%22%3E%3Cdefs%3E%3CradialGradient id=%22g%22%3E%3Cstop offset=%220%22 stop-color=%22%23fff%22/%3E%3Cstop offset=%22.4%22 stop-color=%22%23fff%22 stop-opacity=%22.55%22/%3E%3Cstop offset=%221%22 stop-color=%22%23fff%22 stop-opacity=%220%22/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx=%22136%22 cy=%2215.3%22 r=%222.1%22 fill=%22url(%23g)%22 opacity=%220.73%22/%3E%3Ccircle cx=%22152%22 cy=%2215.9%22 r=%221.2%22 fill=%22url(%23g)%22 opacity=%220.76%22/%3E%3Ccircle cx=%22189%22 cy=%2220.4%22 r=%221.1%22 fill=%22url(%23g)%22 opacity=%220.65%22/%3E%3Ccircle cx=%2227%22 cy=%2220.8%22 r=%221.8%22 fill=%22url(%23g)%22 opacity=%220.52%22/%3E%3Ccircle cx=%22295%22 cy=%2224.2%22 r=%221.8%22 fill=%22url(%23g)%22 opacity=%220.81%22/%3E%3Ccircle cx=%2247%22 cy=%223.3%22 r=%221.6%22 fill=%22url(%23g)%22 opacity=%220.53%22/%3E%3Ccircle cx=%2257%22 cy=%228.3%22 r=%221.0%22 fill=%22url(%23g)%22 opacity=%220.73%22/%3E%3Ccircle cx=%22132%22 cy=%2221.5%22 r=%221.6%22 fill=%22url(%23g)%22 opacity=%220.82%22/%3E%3Ccircle cx=%22150%22 cy=%2217.6%22 r=%221.5%22 fill=%22url(%23g)%22 opacity=%220.64%22/%3E%3Ccircle cx=%22299%22 cy=%2224.9%22 r=%222.0%22 fill=%22url(%23g)%22 opacity=%220.85%22/%3E%3Ccircle cx=%2295%22 cy=%228.1%22 r=%221.3%22 fill=%22url(%23g)%22 opacity=%220.54%22/%3E%3Ccircle cx=%22230%22 cy=%2211.8%22 r=%222.0%22 fill=%22url(%23g)%22 opacity=%220.69%22/%3E%3Ccircle cx=%22287%22 cy=%2221.6%22 r=%221.0%22 fill=%22url(%23g)%22 opacity=%220.60%22/%3E%3Ccircle cx=%22273%22 cy=%2213.3%22 r=%222.2%22 fill=%22url(%23g)%22 opacity=%220.70%22/%3E%3Ccircle cx=%2222%22 cy=%2216.8%22 r=%221.9%22 fill=%22url(%23g)%22 opacity=%220.63%22/%3E%3Ccircle cx=%2226%22 cy=%2210.3%22 r=%222.2%22 fill=%22url(%23g)%22 opacity=%220.88%22/%3E%3Ccircle cx=%2235%22 cy=%228.4%22 r=%221.1%22 fill=%22url(%23g)%22 opacity=%220.53%22/%3E%3Ccircle cx=%22239%22 cy=%226.9%22 r=%221.7%22 fill=%22url(%23g)%22 opacity=%220.72%22/%3E%3Ccircle cx=%2257%22 cy=%2219.1%22 r=%221.2%22 fill=%22url(%23g)%22 opacity=%220.82%22/%3E%3Ccircle cx=%2235%22 cy=%2212.3%22 r=%221.3%22 fill=%22url(%23g)%22 opacity=%220.63%22/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 300 28%22%3E%3Cdefs%3E%3CradialGradient id=%22g%22%3E%3Cstop offset=%220%22 stop-color=%22%23fff%22/%3E%3Cstop offset=%22.4%22 stop-color=%22%23fff%22 stop-opacity=%22.55%22/%3E%3Cstop offset=%221%22 stop-color=%22%23fff%22 stop-opacity=%220%22/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx=%22136%22 cy=%2215.3%22 r=%222.1%22 fill=%22url(%23g)%22 opacity=%220.73%22/%3E%3Ccircle cx=%22152%22 cy=%2215.9%22 r=%221.2%22 fill=%22url(%23g)%22 opacity=%220.76%22/%3E%3Ccircle cx=%22189%22 cy=%2220.4%22 r=%221.1%22 fill=%22url(%23g)%22 opacity=%220.65%22/%3E%3Ccircle cx=%2227%22 cy=%2220.8%22 r=%221.8%22 fill=%22url(%23g)%22 opacity=%220.52%22/%3E%3Ccircle cx=%22295%22 cy=%2224.2%22 r=%221.8%22 fill=%22url(%23g)%22 opacity=%220.81%22/%3E%3Ccircle cx=%2247%22 cy=%223.3%22 r=%221.6%22 fill=%22url(%23g)%22 opacity=%220.53%22/%3E%3Ccircle cx=%2257%22 cy=%228.3%22 r=%221.0%22 fill=%22url(%23g)%22 opacity=%220.73%22/%3E%3Ccircle cx=%22132%22 cy=%2221.5%22 r=%221.6%22 fill=%22url(%23g)%22 opacity=%220.82%22/%3E%3Ccircle cx=%22150%22 cy=%2217.6%22 r=%221.5%22 fill=%22url(%23g)%22 opacity=%220.64%22/%3E%3Ccircle cx=%22299%22 cy=%2224.9%22 r=%222.0%22 fill=%22url(%23g)%22 opacity=%220.85%22/%3E%3Ccircle cx=%2295%22 cy=%228.1%22 r=%221.3%22 fill=%22url(%23g)%22 opacity=%220.54%22/%3E%3Ccircle cx=%22230%22 cy=%2211.8%22 r=%222.0%22 fill=%22url(%23g)%22 opacity=%220.69%22/%3E%3Ccircle cx=%22287%22 cy=%2221.6%22 r=%221.0%22 fill=%22url(%23g)%22 opacity=%220.60%22/%3E%3Ccircle cx=%22273%22 cy=%2213.3%22 r=%222.2%22 fill=%22url(%23g)%22 opacity=%220.70%22/%3E%3Ccircle cx=%2222%22 cy=%2216.8%22 r=%221.9%22 fill=%22url(%23g)%22 opacity=%220.63%22/%3E%3Ccircle cx=%2226%22 cy=%2210.3%22 r=%222.2%22 fill=%22url(%23g)%22 opacity=%220.88%22/%3E%3Ccircle cx=%2235%22 cy=%228.4%22 r=%221.1%22 fill=%22url(%23g)%22 opacity=%220.53%22/%3E%3Ccircle cx=%22239%22 cy=%226.9%22 r=%221.7%22 fill=%22url(%23g)%22 opacity=%220.72%22/%3E%3Ccircle cx=%2257%22 cy=%2219.1%22 r=%221.2%22 fill=%22url(%23g)%22 opacity=%220.82%22/%3E%3Ccircle cx=%2235%22 cy=%2212.3%22 r=%221.3%22 fill=%22url(%23g)%22 opacity=%220.63%22/%3E%3C/svg%3E"); -webkit-mask-size: 300px 28px; mask-size: 300px 28px; animation: dustL300 30s linear infinite, twinkle 3.4s ease-in-out infinite alternate; }
+.dust--bottom .helix, .dust--bottom.dust--back i { animation-name: dustL; }
+.dust--bottom .motes { animation-name: dustR300, twinkle; }
+body[data-fx='high'] .dust { display: block; }
+
+/* =====================================================================
+   HEADER
+   ===================================================================== */
+.top { margin-top: 30px; }
+.toprow { display: flex; align-items: center; gap: 16px; }
+.sigil { display: block; width: 50px; height: 86px; flex: 0 0 50px; object-fit: cover; border-radius: 4px; border: 1px solid var(--energy);
+  box-shadow: none; }
+.brand { font-family: var(--serif); font-weight: 700; letter-spacing: .42em; font-size: clamp(26px, 4.4vw, 42px); line-height: 1.1; color: var(--energy2);
+  text-shadow: 0 0 8px var(--energy), 0 0 28px color-mix(in srgb, var(--energy) 70%, transparent); animation: brandFlicker 8s linear infinite; }
+.sub { margin-top: 4px; font-size: 11px; letter-spacing: .24em; color: color-mix(in srgb, var(--energy2) 78%, #6fa); }
+.spacer { flex: 1; }
+.rankbox { text-align: right; }
+.rank { white-space: nowrap; display: inline-block; padding: 3px 12px; border: 1px solid var(--energy); color: var(--energy2); letter-spacing: .22em; font-weight: 700; font-size: 15px;
+  background: color-mix(in srgb, var(--energy) 12%, #03101f); box-shadow: none; }
+.lv { margin-top: 6px; font-size: 24px; font-weight: 700; letter-spacing: .14em; text-shadow: 0 0 14px var(--energy); }
+.topxp { margin-top: 14px; }
+.xplabel { display: flex; justify-content: space-between; margin-top: 6px; font-size: 11px; letter-spacing: .2em; color: var(--energy2); }
+
+.xpbar { position: relative; height: 10px; border: 1px solid color-mix(in srgb, var(--energy) 55%, #0a1626); background: #000; border-radius: 2px; overflow: hidden; }
+.xpbar > span { display: block; position: relative; height: 100%; min-width: 2px; overflow: hidden; transition: width .9s cubic-bezier(.2, .8, .2, 1);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--energy) 50%, #02122a), var(--energy), var(--energy2)); box-shadow: 0 0 6px var(--energy); }
+.xpbar > span::after { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, .65) 50%, transparent 70%); transform: translateX(-110%); animation: shine 3s ease-in-out infinite; }
+
+/* ---------- metrics ---------- */
+.metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px; }
+.metric label { display: block; font-size: 11px; letter-spacing: .22em; color: var(--energy2); }
+.metric strong { display: block; margin-top: 4px; font-size: 32px; line-height: 1.1; font-weight: 700; text-shadow: 0 0 8px color-mix(in srgb, var(--energy) 60%, transparent); }
+.metric small { display: block; margin-top: 2px; color: var(--muted); font-size: 13px; }
+
+/* ---------- navigation ---------- */
+.nav { position: sticky; top: 0; z-index: 30; display: flex; gap: 8px; padding: 10px 6px; margin: 0 -6px; overflow-x: auto; scrollbar-width: none;
+  background: linear-gradient(180deg, #000 0, #000 80%, transparent); -webkit-overflow-scrolling: touch; }
+.nav::-webkit-scrollbar { display: none; }
+.nav button { display: inline-flex; align-items: center; gap: 8px; flex: 0 0 auto; white-space: nowrap; font-size: 15px; letter-spacing: .08em; padding: 9px 16px;
+  background: linear-gradient(180deg, #030a16, #01040b); border-color: color-mix(in srgb, var(--energy) 30%, #0a1626); color: #b8cbe0; }
+.nav button.active { color: #fff; border-color: var(--energy2);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--energy) 34%, #04142a), color-mix(in srgb, var(--energy) 12%, #030a16));
+  box-shadow: 0 0 8px color-mix(in srgb, var(--energy) 30%, transparent); }
+
+/* =====================================================================
+   BUTTONS / INPUTS
+   ===================================================================== */
+button, .filebtn {
+  position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; overflow: hidden;
+  font-weight: 600; letter-spacing: .07em; padding: 10px 16px; border-radius: 3px; text-align: center;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--energy) 11%, #020812), #01050d);
+  border: 1px solid color-mix(in srgb, var(--energy) 50%, #0b1c33);
+  box-shadow: none;
+  transition: border-color .2s, box-shadow .2s, transform .12s, filter .2s;
+}
+button::after, .filebtn::after { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 35%, rgba(255, 255, 255, .22) 50%, transparent 65%); transform: translateX(-120%); transition: transform .55s; }
+button:hover:not(:disabled)::after, .filebtn:hover::after { transform: translateX(120%); }
+button:hover:not(:disabled), .filebtn:hover { border-color: var(--energy2); box-shadow: 0 0 8px color-mix(in srgb, var(--energy) 35%, transparent); }
+button:active:not(:disabled) { transform: translateY(1px) scale(.99); }
+button:disabled { opacity: .38; cursor: not-allowed; }
+.primary { border-color: var(--energy2); font-weight: 700; color: #fff; text-shadow: 0 0 8px var(--energy);
+  background: linear-gradient(110deg, color-mix(in srgb, var(--energy) 62%, #061a3a), color-mix(in srgb, var(--energy) 28%, #2a0f6a));
+  box-shadow: 0 0 8px color-mix(in srgb, var(--energy) 28%, transparent); }
+.danger { border-color: #c2405f; color: #ffd5df; background: linear-gradient(180deg, #3d1328, #240a17); box-shadow: inset 0 0 14px #ff426d1a; }
+.danger:hover:not(:disabled) { border-color: #ff7a98; box-shadow: 0 0 18px #ff426d66, inset 0 0 16px #ff426d33; }
+.small { padding: 5px 12px; font-size: 14px; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.actions > * { flex: 1 1 auto; }
+
+.field { width: 100%; padding: 10px 12px; margin-top: 7px; border-radius: 3px; color: var(--text);
+  background: #000309; border: 1px solid color-mix(in srgb, var(--energy) 40%, #0a1626); box-shadow: inset 0 0 12px color-mix(in srgb, var(--energy) 8%, transparent); }
+select.field { cursor: pointer; }
+.field:focus { outline: none; border-color: var(--energy2); box-shadow: 0 0 14px color-mix(in srgb, var(--energy) 40%, transparent); }
+textarea.journal { min-height: 150px; resize: vertical; margin-top: 12px; }
+.filebtn { flex: 1 1 auto; }
+.filebtn input { display: none; }
+hr { border: 0; height: 1px; margin: 20px 0; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--energy) 50%, transparent), transparent); }
+
+input[type=checkbox] { appearance: none; -webkit-appearance: none; flex: 0 0 22px; width: 22px; height: 22px; margin: 0; display: grid; place-content: center; cursor: pointer;
+  border: 1.5px solid color-mix(in srgb, var(--energy) 75%, #0a1a2c); border-radius: 3px; background: #030a16; transition: background .2s, box-shadow .2s, border-color .2s; }
+input[type=checkbox]::after { content: ''; width: 11px; height: 6px; border-left: 2.5px solid #fff; border-bottom: 2.5px solid #fff; transform: rotate(-45deg) scale(0) translate(1px, -1px); transition: transform .18s cubic-bezier(.3, 1.6, .5, 1); }
+input[type=checkbox]:checked { background: linear-gradient(135deg, var(--energy), color-mix(in srgb, var(--energy) 45%, #1a0a4a)); border-color: var(--energy2); box-shadow: 0 0 14px var(--energy); }
+input[type=checkbox]:checked::after { transform: rotate(-45deg) scale(1) translate(1px, -1px); }
+input[type=checkbox]:disabled { opacity: .45; cursor: not-allowed; }
+
+/* ---------- tags ---------- */
+.goal-line { display: flex; justify-content: space-between; align-items: center; gap: 8px 14px; flex-wrap: wrap; margin: 4px 0 8px; padding: 9px 12px; font-size: 12px; letter-spacing: .16em; color: var(--energy2); border: 1px solid color-mix(in srgb, var(--energy) 60%, transparent); border-radius: 3px; background: color-mix(in srgb, var(--energy) 10%, #020812); }
+.goal-line b { font-weight: 700; color: #cfe3f7; }
+.goal-line.is-done { border-color: var(--green); background: #6bffcb14; color: var(--green); }
+.goal-line.is-done b { color: var(--green); text-shadow: 0 0 10px #6bffcb88; }
+.tag { display: inline-block; padding: 2px 9px; font-size: 11px; font-weight: 700; letter-spacing: .14em; color: var(--energy2); border: 1px solid color-mix(in srgb, var(--energy) 55%, transparent);
+  background: color-mix(in srgb, var(--energy) 10%, #030a16); border-radius: 2px; vertical-align: middle; }
+.tag.locked { color: #7d8fa6; border-color: #2a3a52; background: #060d18; }
+.xp { color: var(--gold); font-weight: 700; letter-spacing: .08em; text-shadow: 0 0 10px #ffb30055; white-space: nowrap; }
+
+/* =====================================================================
+   CARDS + CONTENT
+   ===================================================================== */
+.card-title { display: flex; align-items: center; gap: 11px; margin-bottom: 14px; font-size: 13px; font-weight: 700; letter-spacing: .3em; color: var(--energy2); text-shadow: 0 0 10px var(--energy); }
+.card-title i { width: 8px; height: 8px; background: var(--energy); transform: rotate(45deg); box-shadow: 0 0 9px var(--energy); flex: 0 0 8px; }
+.card-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, color-mix(in srgb, var(--energy) 65%, transparent), transparent); }
+.card p + p, .card p + .tag { margin-top: 10px; }
+.notice { margin-top: 10px; font-size: 14px; color: var(--muted); }
+.audio-help { margin: 10px 0; font-size: 13px; color: var(--muted); }
+.transmission { font-size: 22px; font-weight: 700; letter-spacing: .06em; color: var(--energy2); text-shadow: 0 0 14px var(--energy); margin-bottom: 6px; }
+.boss-name { font-size: 20px; }
+.points { font-size: 28px; color: var(--gold); text-shadow: 0 0 14px #ffb30066; }
+.sec { margin-top: 22px; font-size: 13px; letter-spacing: .28em; color: var(--energy2); }
+.entry { white-space: pre-wrap; margin-top: 5px; }
+.boss-box { padding: 18px 0 14px; }
+.boss-box h3 { font-size: 24px; margin: 4px 0 6px; letter-spacing: .08em; text-shadow: 0 0 14px var(--energy); }
+.boss-box .sub { margin: 0; }
+
+.timer-line { display: flex; justify-content: space-between; align-items: center; margin: 4px 0 8px; padding: 8px 12px; font-size: 12px; letter-spacing: .22em; color: var(--energy2);
+  border: 1px dashed color-mix(in srgb, var(--energy) 45%, transparent); background: color-mix(in srgb, var(--energy) 6%, transparent); border-radius: 3px; font-variant-numeric: tabular-nums; }
+
+.quest, .body-task, .achievement, .stat, .skill { display: flex; align-items: center; gap: 12px; }
+.quest { position: relative; margin: 9px 0; padding: 12px 14px; cursor: pointer; border-radius: 4px;
+  border: 1px solid color-mix(in srgb, var(--energy) 34%, #0a1626); border-left: 3px solid color-mix(in srgb, var(--energy) 80%, #0a1626);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--energy) 5%, #000), #000308 70%); transition: border-color .25s, background .25s, transform .15s; }
+.quest:hover { border-color: color-mix(in srgb, var(--energy) 55%, #0a1626); transform: translateX(2px); }
+.quest.is-done { border-left-color: var(--green); background: linear-gradient(90deg, #6bffcb12, rgba(2, 6, 14, .4) 70%); }
+.quest-locked { opacity: .6; cursor: not-allowed; border-left-color: #3a4a62; }
+.qbody { flex: 1; min-width: 0; }
+.qname { font-weight: 700; letter-spacing: .05em; }
+.qstat { display: inline-block; margin-right: 8px; padding: 0 6px; font-size: 11px; letter-spacing: .12em; color: var(--energy2); border: 1px solid color-mix(in srgb, var(--energy) 50%, transparent); border-radius: 2px; vertical-align: 1px; }
+.qdesc { margin-top: 3px; font-size: 14px; color: var(--muted); }
+
+.body-training { margin: 8px 0 10px; border: 1px solid color-mix(in srgb, var(--energy) 40%, #0a1626); border-radius: 4px; background: #01040a; }
+.body-training summary { list-style: none; display: flex; align-items: center; gap: 9px; padding: 12px 14px; cursor: pointer; font-weight: 700; letter-spacing: .1em; color: var(--energy2); }
+.body-training summary::-webkit-details-marker { display: none; }
+.body-training summary .tag { margin-left: auto; }
+.body-content { padding: 4px 14px 14px; }
+.body-task { padding: 9px 0; cursor: pointer; align-items: flex-start; }
+.body-task span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.body-task small { color: var(--muted); font-size: 13px; line-height: 1.35; }
+.penalty-zone { margin-top: 16px; padding: 14px; border: 1px solid #a92d4c; border-radius: 4px; background: linear-gradient(180deg, #2a0713, #12040a); }
+.penalty-zone h3 { display: flex; align-items: center; gap: 8px; color: #ff7a98; letter-spacing: .1em; font-size: 16px; }
+.penalty-zone h4 { margin: 12px 0 4px; color: #ffd5df; letter-spacing: .08em; }
+.penalty-zone p { margin-top: 6px; color: #e8b3c0; }
+.penalty-zone button { margin-top: 10px; width: 100%; }
+
+.stat { padding: 12px 0; border-bottom: 1px solid color-mix(in srgb, var(--energy) 14%, transparent); }
+.stat:last-of-type { border-bottom: 0; }
+.stat > div:nth-child(2) { flex: 1; min-width: 0; }
+.statcode { flex: 0 0 48px; height: 38px; display: grid; place-items: center; font-weight: 700; letter-spacing: .1em; font-size: 14px; color: var(--energy2);
+  border: 1px solid color-mix(in srgb, var(--energy) 55%, transparent); border-radius: 3px; background: color-mix(in srgb, var(--energy) 10%, #030a16); box-shadow: inset 0 0 10px color-mix(in srgb, var(--energy) 20%, transparent); }
+.statname { font-weight: 700; letter-spacing: .05em; }
+.statdesc { font-size: 13px; color: var(--muted); }
+.statval { font-size: 22px; font-weight: 700; text-shadow: 0 0 12px var(--energy); }
+.alloc { display: flex; align-items: center; gap: 12px; }
+
+.tree { margin-top: 18px; }
+.tree h3 { font-size: 15px; letter-spacing: .16em; color: var(--energy2); margin-bottom: 6px; }
+.skill { padding: 2px 0; border-left: 2px solid color-mix(in srgb, var(--energy) 25%, transparent); padding-left: 12px; margin-left: 4px; }
+.skill.is-on { border-left-color: var(--energy2); }
+.skill .body-task { padding: 8px 0; width: 100%; }
+
+.achievement { padding: 12px 0; border-bottom: 1px solid color-mix(in srgb, var(--energy) 14%, transparent); }
+.achievement:last-child { border-bottom: 0; }
+.achicon { width: 40px; height: 40px; display: grid; place-items: center; font-size: 20px; border: 1px solid #2a3a52; border-radius: 50%; color: #5a6c85; flex: 0 0 40px; }
+.achievement.is-on .achicon { color: var(--gold); border-color: var(--gold); box-shadow: 0 0 16px #ffd77a66, inset 0 0 10px #ffd77a33; text-shadow: 0 0 10px var(--gold); }
+.grow { flex: 1; min-width: 0; }
+
+/* =====================================================================
+   STATUS WINDOW (Player Record)
+   ===================================================================== */
+.sw-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; letter-spacing: .3em; color: var(--energy2); text-shadow: 0 0 10px var(--energy); }
+.sw-online { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; letter-spacing: .22em; }
+.sw-online i { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green); animation: dotPulse 1.8s ease-in-out infinite; }
+.sw-hero { display: flex; align-items: center; gap: 34px; margin-top: 20px; }
+.sw-info { flex: 1; min-width: 0; }
+.sw-rank { font-family: var(--serif); font-weight: 700; font-size: clamp(24px, 4vw, 40px); letter-spacing: .14em; line-height: 1.1; color: #fff; text-shadow: 0 0 10px var(--energy), 0 0 30px color-mix(in srgb, var(--energy) 70%, transparent); }
+.sw-rec { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 28px; margin: 14px 0 16px; }
+.sw-rec > div { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; border-bottom: 1px dotted color-mix(in srgb, var(--energy) 35%, transparent); }
+.sw-rec dt { font-size: 12px; letter-spacing: .2em; color: var(--muted); }
+.sw-rec dd { margin: 0; font-weight: 700; letter-spacing: .06em; color: var(--energy2); text-align: right; }
+.sw-xp { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 7px; font-size: 13px; letter-spacing: .16em; color: #b9cfe6; }
+.sw-xp b { color: var(--energy2); }
+.sw-pts { margin-top: 10px; font-size: 13px; letter-spacing: .2em; color: #b9cfe6; }
+.sw-pts em { font-style: normal; font-size: 20px; font-weight: 700; color: var(--gold); text-shadow: 0 0 12px #ffb30066; margin-right: 4px; }
+
+.orb { position: relative; width: 156px; height: 156px; flex: 0 0 156px; display: grid; place-items: center; }
+.orb__core { position: relative; z-index: 3; width: 118px; height: 118px; border-radius: 50%; display: grid; place-content: center; text-align: center;
+  background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--energy) 42%, #07172e), #040f20 70%); border: 1.5px solid var(--energy2);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--energy) 35%, transparent); }
+.orb__core strong { font-size: 44px; line-height: 1; font-weight: 700; color: #fff; text-shadow: 0 0 14px var(--energy2), 0 0 30px var(--energy); }
+.orb__core small { font-size: 10px; letter-spacing: .28em; color: var(--energy2); }
+.orb::before { content: ''; position: absolute; inset: -16px; border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--energy) 50%, transparent), transparent 72%); }
+.orb__fire { position: absolute; inset: -2px; border-radius: 50%; z-index: 1; pointer-events: none;
+  background: conic-gradient(from 0deg, transparent 0, var(--energy) 10%, var(--energy2) 20%, #fff 24%, transparent 34%, var(--energy) 50%, transparent 66%, var(--energy2) 84%, transparent 100%);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 24px), #000 calc(100% - 20px), #000 calc(100% - 7px), transparent calc(100% - 1px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 24px), #000 calc(100% - 20px), #000 calc(100% - 7px), transparent calc(100% - 1px));
+  animation: spin 4.5s linear infinite; }
+.orb__fire--b { inset: -9px; opacity: .7; animation-duration: 7s; animation-direction: reverse; }
+.orb__dash { position: absolute; inset: 8px; border: 1px dashed color-mix(in srgb, var(--energy2) 60%, transparent); border-radius: 50%; z-index: 2; animation: spin 24s linear infinite; }
+.orb__dash--b { inset: -14px; border-style: dotted; opacity: .55; animation-duration: 36s; animation-direction: reverse; }
+
+.attr-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 22px; }
+.attr-tile { position: relative; padding: 13px; border-radius: 6px; min-width: 0; border: 1px solid color-mix(in srgb, var(--energy) 40%, #0a1626);
+  background: linear-gradient(150deg, color-mix(in srgb, var(--energy) 9%, #020814), #000308 75%); }
+.attr-tile::after { content: ''; position: absolute; inset: -1px; border-radius: 6px; border: 1px solid var(--energy2); opacity: 0; pointer-events: none; animation: tileGlow 5.5s ease-in-out var(--ph, 0s) infinite; }
+.attr-head { display: flex; justify-content: space-between; align-items: center; }
+.attr-code { padding: 0 7px; font-size: 12px; font-weight: 700; letter-spacing: .14em; color: var(--energy2); border: 1px solid color-mix(in srgb, var(--energy) 60%, transparent); border-radius: 2px; }
+.attr-value { margin-top: 6px; font-size: 38px; line-height: 1; font-weight: 700; text-shadow: 0 0 16px var(--energy); }
+.attr-name { margin-top: 4px; font-weight: 700; letter-spacing: .06em; }
+.attr-sub { font-size: 12.5px; line-height: 1.3; color: var(--muted); min-height: 32px; }
+.attr-bar { height: 5px; margin-top: 8px; background: #020712; border-radius: 3px; overflow: hidden; }
+.attr-bar span { display: block; height: 100%; background: linear-gradient(90deg, var(--energy), var(--energy2)); box-shadow: 0 0 10px var(--energy); transition: width .8s; }
+
+/* =====================================================================
+   SYSTEM NOTIFICATION WINDOW
+   ===================================================================== */
+.sys-overlay { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 28px 18px; overflow-y: auto;
+  background: rgba(0, 0, 0, .9); animation: crtOpen .46s cubic-bezier(.2, .75, .25, 1) both; transform-origin: center; }
+.sys-overlay.crt-closing { animation: crtClose .34s cubic-bezier(.4, 0, .8, .2) forwards; pointer-events: none; }
+.sys-alert { width: min(600px, 100%); margin: 36px 0 18px; }
+.sys-alert .frame__body { padding: 26px 28px 26px; text-align: center; }
+.alert-head { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.alert-icon { position: relative; width: 28px; height: 28px; display: inline-grid; place-items: center; font-weight: 700; font-size: 17px; color: var(--energy2); text-shadow: 0 0 8px var(--energy); }
+.alert-icon::before { content: ''; position: absolute; inset: 4px; border: 1.5px solid var(--energy2); transform: rotate(45deg); box-shadow: 0 0 10px var(--energy), inset 0 0 8px color-mix(in srgb, var(--energy) 50%, transparent); }
+.alert-label { font-size: 12px; letter-spacing: .28em; color: var(--energy2); }
+.alert-heading { margin: 18px 0 12px; font-size: clamp(26px, 5.6vw, 38px); line-height: 1.1; font-weight: 700; letter-spacing: .13em; color: #fff;
+  text-shadow: 0 0 10px var(--energy), 0 0 34px var(--energy); animation: brandFlicker 6s linear infinite; }
+.alert-body { min-height: 4.4em; font-size: 17px; line-height: 1.5; color: #d3e4f6; }
+.caret { display: inline-block; width: 8px; height: 1em; margin-left: 2px; vertical-align: -2px; background: var(--energy2); box-shadow: 0 0 8px var(--energy); animation: caretBlink .7s steps(1) infinite; }
+.alert-reward { margin-top: 18px; padding: 9px 12px; font-size: 18px; font-weight: 700; letter-spacing: .14em; color: var(--energy2); text-shadow: 0 0 14px var(--energy);
+  border-top: 1px solid color-mix(in srgb, var(--energy) 50%, transparent); border-bottom: 1px solid color-mix(in srgb, var(--energy) 50%, transparent);
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--energy) 12%, transparent), transparent); opacity: 0; transform: translateY(6px) scale(.98); transition: opacity .5s, transform .5s; }
+.alert-reward.is-on { opacity: 1; transform: none; }
+.alert-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 22px; }
+.alert-actions button { min-width: 150px; font-size: 16px; padding: 11px 22px; }
+.sys-alert.is-danger { --energy: #ff3d6a; --energy2: #ffb0c2; }
+.sys-alert.is-danger .frame { background: linear-gradient(155deg, rgba(34, 5, 14, .94), rgba(12, 2, 6, .96)); }
+.sys-alert.is-danger.frame { background: linear-gradient(155deg, rgba(34, 5, 14, .94), rgba(12, 2, 6, .96)); }
+
+.toast { position: fixed; left: 50%; bottom: 24px; z-index: 120; max-width: calc(100vw - 32px); padding: 11px 20px; transform: translateX(-50%); font-weight: 700; letter-spacing: .12em; font-size: 14px; text-align: center;
+  color: var(--energy2); background: rgba(2, 8, 20, .96); border: 1px solid var(--energy); border-radius: 3px; box-shadow: 0 0 22px color-mix(in srgb, var(--energy) 50%, transparent), inset 0 0 14px color-mix(in srgb, var(--energy) 18%, transparent);
+  animation: crtToast .28s ease-out both; }
+.toast.toast-closing { animation: toastCrtOff .32s cubic-bezier(.4, 0, .8, .2) forwards; }
+
+.penalty-banner { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; padding: 13px 16px; border-radius: 6px; color: #ffd5df;
+  border: 1px solid #c2405f; background: linear-gradient(90deg, #330a18, #14050b); animation: penaltyPulse 2.6s ease-in-out infinite; }
+.penalty-banner strong { display: flex; align-items: center; gap: 8px; letter-spacing: .1em; color: #ff7a98; }
+.penalty-banner small { display: block; margin-top: 3px; font-size: 13px; color: #e8b3c0; }
+
+/* scrollbar */
+* { scrollbar-width: thin; scrollbar-color: #1d4a74 #02060d; }
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-thumb { background: #1d4a74; border-radius: 6px; }
+::-webkit-scrollbar-track { background: #02060d; }
+
+/* =====================================================================
+   KEYFRAMES
+   ===================================================================== */
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes cometDown { 0% { opacity: 1; transform: translateY(-100%); } 46% { opacity: 1; transform: translateY(333%); } 46.01%, 100% { opacity: 0; transform: translateY(333%); } }
+@keyframes cometUp { 0% { opacity: 1; transform: translateY(333%); } 46% { opacity: 1; transform: translateY(-100%); } 46.01%, 100% { opacity: 0; transform: translateY(-100%); } }
+@keyframes flame {
+  0%, 100% { transform: scale(1, .7) skewX(0deg); opacity: .55; }
+  22% { transform: scale(.85, 1.15) skewX(5deg); opacity: .95; }
+  47% { transform: scale(1.05, .88) skewX(-4deg); opacity: .75; }
+  72% { transform: scale(.9, 1.28) skewX(6deg); opacity: 1; }
+}
+@keyframes dustR { from { transform: translateX(-360px); } to { transform: none; } }
+@keyframes dustL { from { transform: none; } to { transform: translateX(-360px); } }
+@keyframes dustR300 { from { transform: translateX(-300px); } to { transform: none; } }
+@keyframes dustL300 { from { transform: none; } to { transform: translateX(-300px); } }
+@keyframes twinkle { from { opacity: .25; } to { opacity: .9; } }
+@keyframes tileGlow { 0%, 100% { opacity: 0; } 50% { opacity: .8; } }
+@keyframes shine { 0%, 40% { transform: translateX(-110%); } 100% { transform: translateX(110%); } }
+@keyframes brandFlicker { 0%, 100% { opacity: 1; } 46% { opacity: 1; } 47% { opacity: .78; } 48% { opacity: 1; } 49% { opacity: .62; } 50% { opacity: 1; } 91% { opacity: 1; } 92% { opacity: .85; } 93% { opacity: 1; } }
+@keyframes dotPulse { 0%, 100% { opacity: .5; transform: scale(.85); } 50% { opacity: 1; transform: scale(1.15); } }
+@keyframes caretBlink { 50% { opacity: 0; } }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes drift { from { transform: translate3d(0, 0, 0) scale(1); } to { transform: translate3d(10vmax, -6vmax, 0) scale(1.15); } }
+@keyframes scanMove { from { transform: translateY(0); } to { transform: translateY(150vh); } }
+@keyframes penaltyPulse { 0%, 100% { box-shadow: 0 0 6px #ff174418; } 50% { box-shadow: 0 0 20px #ff174450; } }
+@keyframes thunderFlash { 0% { opacity: 0; } 6% { opacity: .9; } 12% { opacity: .15; } 20% { opacity: .75; } 40% { opacity: .2; } 100% { opacity: 0; } }
+@keyframes shake { 0%, 100% { transform: none; } 10% { transform: translate(-3px, 1px); } 20% { transform: translate(3px, -2px); } 30% { transform: translate(-2px, 2px); } 45% { transform: translate(2px, -1px); } 60% { transform: translate(-1px, 1px); } }
+@keyframes crtOpen { 0% { opacity: 0; transform: scaleY(.015) scaleX(.72); filter: brightness(2.2); } 45% { opacity: 1; transform: scaleY(.12) scaleX(1); filter: brightness(1.5); } 78% { transform: scaleY(1.025) scaleX(1); filter: brightness(1.1); } 100% { opacity: 1; transform: scaleY(1) scaleX(1); filter: brightness(1); } }
+@keyframes crtClose { 0% { opacity: 1; transform: scaleY(1) scaleX(1); filter: brightness(1); } 65% { opacity: .9; transform: scaleY(.08) scaleX(1); filter: brightness(1.8); } 100% { opacity: 0; transform: scaleY(.01) scaleX(.72); filter: brightness(2.5); } }
+@keyframes crtToast { 0% { opacity: 0; transform: translateX(-50%) scaleY(.06) scaleX(.72); filter: brightness(1.8); } 65% { opacity: 1; transform: translateX(-50%) scaleY(1.05) scaleX(1); } 100% { opacity: 1; transform: translateX(-50%); filter: none; } }
+@keyframes toastCrtOff { 0% { opacity: 1; transform: translateX(-50%) scaleY(1); } 55% { opacity: 1; transform: translateX(-50%) scaleY(.06); } 100% { opacity: 0; transform: translateX(-50%) scaleY(.01) scaleX(.7); } }
+
+/* =====================================================================
+   EFFECT LEVELS (Settings → Visual effects)
+   ===================================================================== */
+body[data-fx='medium'] .flames i { filter: none; }
+body[data-fx='medium'] .orb__fire--b { display: none; }
+body[data-fx='medium'].thunder-hit .app { animation: none; }
+
+body[data-fx='off'] *, body[data-fx='off'] *::before, body[data-fx='off'] *::after { animation: none !important; transition: none !important; }
+body[data-fx='off'] .flames, body[data-fx='off'] .comet, body[data-fx='off'] .dust, body[data-fx='off'] .scan, body[data-fx='off'] .flash, body[data-fx='off'] .orb__fire, body[data-fx='off'] .orb__dash--b { display: none !important; }
+body[data-fx='off'] .xpbar > span::after { display: none; }
+body[data-fx='off'] .alert-reward { opacity: 1; transform: none; }
+
+/* =====================================================================
+   RESPONSIVE
+   ===================================================================== */
+@media (min-width: 901px) { .nav { flex-wrap: wrap; overflow: visible; } }
+@media (max-width: 900px) {
+  .app, .view, .col, .layout { gap: 18px; }
+  .metrics { gap: 16px; }
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .app { padding: 12px 10px 36px; gap: 14px; }
+  .top { margin-top: 26px; }
+  .frame { --cs: 34px; --pad: 14px; }
+  .frame--hero { --cs: 40px; --pad: 14px; }
+  .frame--head { --cs: 34px; --pad: 12px; }
+  .frame--tile { --cs: 20px; --pad: 11px; }
+  .frame__gem { width: 80px; margin-left: -40px; }
+  .toprow { gap: 11px; }
+  .sigil { width: 42px; height: 72px; flex-basis: 42px; }
+  .brand { letter-spacing: .26em; }
+  .sub { font-size: 9.5px; letter-spacing: .12em; }
+  .metric strong { font-size: 24px; }
+  .sw-hero { flex-direction: column; text-align: center; gap: 22px; }
+  .sw-rec { grid-template-columns: minmax(0, 1fr); }
+  .sw-xp { justify-content: center; }
+  .attr-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .alert-label { font-size: 10px; letter-spacing: .16em; }
+  .sys-alert .frame__body { padding: 22px 16px 22px; }
+  .quest { align-items: flex-start; flex-wrap: wrap; }
+  .quest .xp { margin-left: 34px; }
+  .alert-actions button { min-width: 0; flex: 1 1 120px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .flames, .comet, .dust, .scan, .flash, .orb__fire { display: none !important; }
+}
